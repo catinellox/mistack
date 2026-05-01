@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MiStack — Suplementos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0f1e; --card:#111826; --border:rgba(255,255,255,0.07);
+    --text:#f0f4ff; --muted:rgba(255,255,255,0.45);
+    --am:#f6ad55; --lunch:#68d391; --pm:#b794f4; --fasting:#63b3ed;
+    --am-bg:rgba(246,173,85,0.1); --lunch-bg:rgba(104,211,145,0.1);
+    --pm-bg:rgba(183,148,244,0.1); --fasting-bg:rgba(99,179,237,0.1);
+    --green:#68d391;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+  #splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s;}
+  #splash.hide{opacity:0;pointer-events:none;}
+  .splash-icon{font-size:56px;}.splash-title{font-size:28px;font-weight:700;letter-spacing:-0.5px;}.splash-title span{color:var(--fasting);}
+  .splash-sub{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .header{position:sticky;top:0;z-index:50;background:rgba(10,15,30,0.94);backdrop-filter:blur(16px);padding:14px 20px 12px;border-bottom:1px solid var(--border);}
+  .header-row{display:flex;align-items:center;justify-content:space-between;}
+  .header-title{font-size:19px;font-weight:700;letter-spacing:-0.3px;}.header-title span{color:var(--fasting);}
+  .header-time{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-top:3px;}
+  .progress-bar-wrap{margin-top:10px;height:4px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;}
+  .progress-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--fasting),var(--green));transition:width 0.4s ease;}
+  .tabs{display:flex;gap:6px;padding:14px 20px 2px;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{font-size:12px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+  .tab.active{color:#0a0f1e;font-weight:600;}
+  .tab[data-tab="all"].active{background:var(--text);border-color:var(--text);}
+  .tab[data-tab="ayunas"].active{background:var(--fasting);border-color:var(--fasting);}
+  .tab[data-tab="desayuno"].active{background:var(--am);border-color:var(--am);}
+  .tab[data-tab="almuerzo"].active{background:var(--lunch);border-color:var(--lunch);}
+  .tab[data-tab="noche"].active{background:var(--pm);border-color:var(--pm);}
+  .content{padding:16px 20px 110px;}
+  .date-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .date-label{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
+  .reset-btn{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:99px;padding:4px 12px;cursor:pointer;}
+  .moment-section{margin-bottom:22px;}
+  .moment-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .moment-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .moment-title{font-size:12px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
+  .moment-count{font-size:11px;color:var(--muted);margin-left:auto;font-family:'DM Mono',monospace;}
+  .supp-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;user-select:none;}
+  .supp-card:active{transform:scale(0.98);}
+  .supp-card.done{opacity:0.5;}
+  .supp-card.done .supp-name{text-decoration:line-through;text-decoration-color:rgba(255,255,255,0.3);}
+  .supp-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+  .supp-card[data-moment="ayunas"]::before{background:var(--fasting);}
+  .supp-card[data-moment="desayuno"]::before{background:var(--am);}
+  .supp-card[data-moment="almuerzo"]::before{background:var(--lunch);}
+  .supp-card[data-moment="noche"]::before{background:var(--pm);}
+  .check-circle{width:28px;height:28px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.25s;background:transparent;}
+  .supp-card.done .check-circle{background:var(--green);border-color:var(--green);color:#0a0f1e;font-weight:700;}
+  .supp-info{flex:1;min-width:0;}
+  .supp-name{font-size:13.5px;font-weight:500;color:var(--text);}
+  .supp-meta{display:flex;gap:6px;margin-top:5px;align-items:center;flex-wrap:wrap;}
+  .dose-pill{font-size:10px;font-family:'DM Mono',monospace;font-weight:500;padding:2px 9px;border-radius:99px;}
+  .supp-card[data-moment="ayunas"] .dose-pill{background:var(--fasting-bg);color:var(--fasting);}
+  .supp-card[data-moment="desayuno"] .dose-pill{background:var(--am-bg);color:var(--am);}
+  .supp-card[data-moment="almuerzo"] .dose-pill{background:var(--lunch-bg);color:var(--lunch);}
+  .supp-card[data-moment="noche"] .dose-pill{background:var(--pm-bg);color:var(--pm);}
+  .cycle-pill{font-size:10px;color:var(--muted);padding:2px 7px;background:rgba(255,255,255,0.04);border-radius:99px;border:1px solid var(--border);}
+  .supp-benefit{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+  .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(10,15,30,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:12px 20px 24px;}
+  .stats-row{display:flex;gap:10px;margin-bottom:10px;}
+  .stat-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:center;}
+  .stat-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;}
+  .stat-lbl{font-size:10px;color:var(--muted);margin-top:1px;}
+  .all-done-btn{width:100%;background:var(--green);color:#0a0f1e;font-weight:700;font-size:14px;padding:13px;border-radius:12px;border:none;cursor:pointer;transition:all 0.2s;}
+  .all-done-btn:active{transform:scale(0.98);}
+  .completed-msg{width:100%;text-align:center;font-size:13px;font-weight:600;color:var(--green);padding:10px;letter-spacing:0.3px;}
+  @keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+  .confetti-piece{position:fixed;top:0;width:8px;height:8px;animation:confetti-fall 2s ease-in forwards;pointer-events:none;z-index:200;}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-icon">💊</div>
+  <div class="splash-title">Mi<span>Stack</span></div>
+  <div class="splash-sub">PROTOCOLO DE SUPLEMENTACIÓN</div>
+</div>
+
+<div class="header">
+  <div class="header-row">
+    <div>
+      <div class="header-title">Mi<span>Stack</span></div>
+      <div class="header-time" id="current-time"></div>
+    </div>
+    <div style="font-size:26px;" id="header-emoji">☀️</div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="all"      onclick="filterTab('all',this)">Todos</button>
+  <button class="tab"        data-tab="ayunas"   onclick="filterTab('ayunas',this)">💧 Ayunas</button>
+  <button class="tab"        data-tab="desayuno" onclick="filterTab('desayuno',this)">☀️ Desayuno</button>
+  <button class="tab"        data-tab="almuerzo" onclick="filterTab('almuerzo',this)">🌤 Almuerzo</button>
+  <button class="tab"        data-tab="noche"    onclick="filterTab('noche',this)">🌙 Noche</button>
+</div>
+
+<div class="content">
+  <div class="date-row">
+    <div class="date-label" id="date-label"></div>
+    <button class="reset-btn" onclick="resetDay()">↺ Resetear día</button>
+  </div>
+  <div id="supp-list"></div>
+</div>
+
+<div class="bottom-bar">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" id="stat-done">0</div><div class="stat-lbl">Tomados</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-total">12</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completado</div></div>
+  </div>
+  <div id="bottom-action">
+    <button class="all-done-btn" onclick="markAllDone()">✓ Marcar todo como tomado</button>
+  </div>
+</div>
+
+<script>
+const SUPPLEMENTS = [
+  {id:'prob',  moment:'ayunas',  name:'Probiótico',            brand:'Swanson',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Salud intestinal y absorción de nutrientes.'},
+  {id:'tean',  moment:'desayuno',name:'L-Teanina + Cafeína',   brand:'BOG',        dose:'1 cápsula',             cycle:'5ON / 2OFF', benefit:'Foco cognitivo sin ansiedad.'},
+  {id:'mglt1', moment:'desayuno',name:'Mg L-Treonato',         brand:'Magtein',    dose:'2 cápsulas',            cycle:'Diario',     benefit:'Reparación cerebral y memoria.'},
+  {id:'d3k2',  moment:'desayuno',name:'D3 + K2',               brand:'Swanson',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Base hormonal, salud ósea e inmune.'},
+  {id:'om3',   moment:'desayuno',name:'Omega-3 Fish Oil',       brand:'Swanson',    dose:'1 softgel',             cycle:'Diario',     benefit:'Antiinflamatorio y salud neuronal.'},
+  {id:'maca',  moment:'desayuno',name:'Maca Negra',             brand:'Swanson',    dose:'2 cápsulas',            cycle:'Diario',     benefit:'Libido y resistencia física.'},
+  {id:'shil',  moment:'almuerzo',name:'Shilajit + Tongkat Ali', brand:'BOG',        dose:'2 cápsulas',            cycle:'5ON / 2OFF', benefit:'Pico de testosterona libre.'},
+  {id:'citr',  moment:'almuerzo',name:'L-Citrulina Malato',     brand:'Swanson',    dose:'1 cáp (4–6 pre-entreno)',cycle:'Diario',   benefit:'Flujo sanguíneo y oxigenación.'},
+  {id:'lion',  moment:'almuerzo',name:'Melena de León (gotas)', brand:'Mundo Fungi',dose:'1 ml — 30 gotas',       cycle:'Diario',     benefit:'Neurogénesis y foco a largo plazo.'},
+  {id:'mglt2', moment:'noche',   name:'Mg L-Treonato',          brand:'Magtein',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Reparación cerebral durante el sueño.'},
+  {id:'zma',   moment:'noche',   name:'ZMA (Zinc + Mg + B6)',   brand:'Swanson',    dose:'3 cápsulas',            cycle:'Diario',     benefit:'Recuperación muscular y hormonal nocturna.'},
+  {id:'mgtrip',moment:'noche',   name:'Citrato Mg + Triptófano',brand:'Premium',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Induce relajación y sueño profundo.'},
+];
+
+const MOMENT_META = {
+  ayunas:   {label:'Solo Ayunas',             color:'var(--fasting)',emoji:'💧'},
+  desayuno: {label:'Desayuno',                color:'var(--am)',     emoji:'☀️'},
+  almuerzo: {label:'Almuerzo',                color:'var(--lunch)',  emoji:'🌤'},
+  noche:    {label:'Noche — antes de dormir', color:'var(--pm)',     emoji:'🌙'},
+};
+
+let state = {}, currentFilter = 'all';
+
+function getToday(){ return new Date().toLocaleDateString('es-CL'); }
+
+function loadState(){
+  try{
+    const s = localStorage.getItem('mistack_v3');
+    if(s){ const p=JSON.parse(s); if(p.date===getToday()){state=p.checked||{};return;} }
+  }catch(e){}
+  state={}; saveState();
+}
+function saveState(){ try{localStorage.setItem('mistack_v3',JSON.stringify({date:getToday(),checked:state}));}catch(e){} }
+function toggleSupp(id){ state[id]=!state[id]; saveState(); render(); }
+function resetDay(){ if(confirm('¿Resetear todos los registros del día?')){ state={}; saveState(); render(); } }
+function markAllDone(){ SUPPLEMENTS.forEach(s=>{state[s.id]=true;}); saveState(); render(); launchConfetti(); }
+function filterTab(tab,btn){ currentFilter=tab; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); render(); }
+
+function render(){
+  const moments=['ayunas','desayuno','almuerzo','noche'];
+  const vis = currentFilter==='all' ? moments : [currentFilter];
+  let html='';
+  vis.forEach(moment=>{
+    const supps=SUPPLEMENTS.filter(s=>s.moment===moment);
+    if(!supps.length) return;
+    const meta=MOMENT_META[moment];
+    const done=supps.filter(s=>state[s.id]).length;
+    html+=`<div class="moment-section">
+      <div class="moment-header">
+        <div class="moment-dot" style="background:${meta.color}"></div>
+        <div class="moment-title" style="color:${meta.color}">${meta.emoji} ${meta.label}</div>
+        <div class="moment-count">${done}/${supps.length}</div>
+      </div>`;
+    supps.forEach(s=>{
+      const d=!!state[s.id];
+      html+=`<div class="supp-card ${d?'done':''}" data-moment="${s.moment}" onclick="toggleSupp('${s.id}')">
+        <div class="check-circle">${d?'✓':''}</div>
+        <div class="supp-info">
+          <div class="supp-name">${s.name}</div>
+          <div class="supp-meta">
+            <span class="dose-pill">${s.dose}</span>
+            <span class="cycle-pill">${s.cycle}</span>
+          </div>
+          <div class="supp-benefit">${s.benefit}</div>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById('supp-list').innerHTML=html;
+  updateStats();
+}
+
+function updateStats(){
+  const total=SUPPLEMENTS.length, done=SUPPLEMENTS.filter(s=>state[s.id]).length, pct=Math.round(done/total*100);
+  document.getElementById('stat-done').textContent=done;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-pct').textContent=pct+'%';
+  document.getElementById('progress-fill').style.width=pct+'%';
+  document.getElementById('bottom-action').innerHTML = done>=total
+    ? '<div class="completed-msg">🎉 ¡Stack completo del día! Excelente.</div>'
+    : '<button class="all-done-btn" onclick="markAllDone()">✓ Marcar todo como tomado</button>';
+}
+
+function updateClock(){
+  const now=new Date();
+  document.getElementById('current-time').textContent=now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const h=now.getHours();
+  document.getElementById('header-emoji').textContent=h<7?'🌙':h<13?'☀️':h<19?'🌤':'🌙';
+  document.getElementById('date-label').textContent=now.toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function launchConfetti(){
+  const colors=['#f6ad55','#68d391','#63b3ed','#b794f4','#fc8181','#ffffff'];
+  for(let i=0;i<50;i++){
+    const p=document.createElement('div'); p.className='confetti-piece';
+    p.style.cssText=`left:${Math.random()*100}vw;animation-delay:${Math.random()}s;animation-duration:${1.5+Math.random()}s;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'}`;
+    document.body.appendChild(p); setTimeout(()=>p.remove(),3500);
+  }
+}
+
+setTimeout(()=>{ const s=document.getElementById('splash'); s.classList.add('hide'); setTimeout(()=>s.remove(),600); },1400);
+loadState(); render(); updateClock(); setInterval(updateClock,1000);
+</script>
+</body>
+</html>
