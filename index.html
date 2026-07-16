@@ -34,8 +34,8 @@
   .tab[data-tab="ayunas"].active{background:var(--fasting);border-color:var(--fasting);}
   .tab[data-tab="desayuno"].active{background:var(--am);border-color:var(--am);}
   .tab[data-tab="almuerzo"].active{background:var(--lunch);border-color:var(--lunch);}
-  .tab[data-tab="noche"].active{background:var(--pm);border-color:var(--pm);}
   .content{padding:16px 20px 110px;}
+  .safe-banner{background:rgba(104,211,145,0.1);border:1px solid rgba(104,211,145,0.25);border-radius:12px;padding:11px 14px;margin-bottom:16px;font-size:11.5px;color:#8fe0b0;line-height:1.5;}
   .date-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
   .date-label{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;}
   .reset-btn{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:99px;padding:4px 12px;cursor:pointer;}
@@ -52,7 +52,6 @@
   .supp-card[data-moment="ayunas"]::before{background:var(--fasting);}
   .supp-card[data-moment="desayuno"]::before{background:var(--am);}
   .supp-card[data-moment="almuerzo"]::before{background:var(--lunch);}
-  .supp-card[data-moment="noche"]::before{background:var(--pm);}
   .check-circle{width:28px;height:28px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;transition:all 0.25s;background:transparent;}
   .supp-card.done .check-circle{background:var(--green);border-color:var(--green);color:#0a0f1e;font-weight:700;}
   .supp-info{flex:1;min-width:0;}
@@ -62,8 +61,9 @@
   .supp-card[data-moment="ayunas"] .dose-pill{background:var(--fasting-bg);color:var(--fasting);}
   .supp-card[data-moment="desayuno"] .dose-pill{background:var(--am-bg);color:var(--am);}
   .supp-card[data-moment="almuerzo"] .dose-pill{background:var(--lunch-bg);color:var(--lunch);}
-  .supp-card[data-moment="noche"] .dose-pill{background:var(--pm-bg);color:var(--pm);}
-  .cycle-pill{font-size:10px;color:var(--muted);padding:2px 7px;background:rgba(255,255,255,0.04);border-radius:99px;border:1px solid var(--border);}
+  .tier-pill{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:500;}
+  .tier-esencial{background:rgba(104,211,145,0.15);color:#8fe0b0;}
+  .tier-opcional{background:rgba(255,255,255,0.06);color:var(--muted);}
   .supp-benefit{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
   .bottom-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(10,15,30,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding:12px 20px 24px;}
   .stats-row{display:flex;gap:10px;margin-bottom:10px;}
@@ -82,7 +82,7 @@
 <div id="splash">
   <div class="splash-icon">💊</div>
   <div class="splash-title">Mi<span>Stack</span></div>
-  <div class="splash-sub">PROTOCOLO DE SUPLEMENTACIÓN</div>
+  <div class="splash-sub">STACK SEGURO · FIBROMIALGIA</div>
 </div>
 
 <div class="header">
@@ -101,10 +101,10 @@
   <button class="tab"        data-tab="ayunas"   onclick="filterTab('ayunas',this)">💧 Ayunas</button>
   <button class="tab"        data-tab="desayuno" onclick="filterTab('desayuno',this)">☀️ Desayuno</button>
   <button class="tab"        data-tab="almuerzo" onclick="filterTab('almuerzo',this)">🌤 Almuerzo</button>
-  <button class="tab"        data-tab="noche"    onclick="filterTab('noche',this)">🌙 Noche</button>
 </div>
 
 <div class="content">
+  <div class="safe-banner">✓ Todos sin interacción con duloxetina, modafinilo ni trazodona. Sin triptófano, cafeína ni ginseng.</div>
   <div class="date-row">
     <div class="date-label" id="date-label"></div>
     <button class="reset-btn" onclick="resetDay()">↺ Resetear día</button>
@@ -115,7 +115,7 @@
 <div class="bottom-bar">
   <div class="stats-row">
     <div class="stat-box"><div class="stat-val" id="stat-done">0</div><div class="stat-lbl">Tomados</div></div>
-    <div class="stat-box"><div class="stat-val" id="stat-total">12</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-box"><div class="stat-val" id="stat-total">6</div><div class="stat-lbl">Total</div></div>
     <div class="stat-box"><div class="stat-val" id="stat-pct">0%</div><div class="stat-lbl">Completado</div></div>
   </div>
   <div id="bottom-action">
@@ -125,25 +125,18 @@
 
 <script>
 const SUPPLEMENTS = [
-  {id:'prob',  moment:'ayunas',  name:'Probiótico',            brand:'Swanson',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Salud intestinal y absorción de nutrientes.'},
-  {id:'tean',  moment:'desayuno',name:'L-Teanina + Cafeína',   brand:'BOG',        dose:'1 cápsula',             cycle:'5ON / 2OFF', benefit:'Foco cognitivo sin ansiedad.'},
-  {id:'mglt1', moment:'desayuno',name:'Mg L-Treonato',         brand:'Magtein',    dose:'2 cápsulas',            cycle:'Diario',     benefit:'Reparación cerebral y memoria.'},
-  {id:'d3k2',  moment:'desayuno',name:'D3 + K2',               brand:'Swanson',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Base hormonal, salud ósea e inmune.'},
-  {id:'om3',   moment:'desayuno',name:'Omega-3 Fish Oil',       brand:'Swanson',    dose:'1 softgel',             cycle:'Diario',     benefit:'Antiinflamatorio y salud neuronal.'},
-  {id:'maca',  moment:'desayuno',name:'Maca Negra',             brand:'Swanson',    dose:'2 cápsulas',            cycle:'Diario',     benefit:'Libido y resistencia física.'},
-  {id:'shil',  moment:'almuerzo',name:'Shilajit + Tongkat Ali', brand:'BOG',        dose:'2 cápsulas',            cycle:'5ON / 2OFF', benefit:'Pico de testosterona libre.'},
-  {id:'citr',  moment:'almuerzo',name:'L-Citrulina Malato',     brand:'Swanson',    dose:'1 cáp (4–6 pre-entreno)',cycle:'Diario',   benefit:'Flujo sanguíneo y oxigenación.'},
-  {id:'lion',  moment:'almuerzo',name:'Melena de León (gotas)', brand:'Mundo Fungi',dose:'1 ml — 30 gotas',       cycle:'Diario',     benefit:'Neurogénesis y foco a largo plazo.'},
-  {id:'mglt2', moment:'noche',   name:'Mg L-Treonato',          brand:'Magtein',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Reparación cerebral durante el sueño.'},
-  {id:'zma',   moment:'noche',   name:'ZMA (Zinc + Mg + B6)',   brand:'Swanson',    dose:'3 cápsulas',            cycle:'Diario',     benefit:'Recuperación muscular y hormonal nocturna.'},
-  {id:'mgtrip',moment:'noche',   name:'Citrato Mg + Triptófano',brand:'Premium',    dose:'1 cápsula',             cycle:'Diario',     benefit:'Induce relajación y sueño profundo.'},
+  {id:'prob',  moment:'ayunas',  name:'Probiótico',        tier:'Recomendado', dose:'1 cápsula',      benefit:'Eje intestino-cerebro; digestión y ánimo.'},
+  {id:'om3',   moment:'desayuno',name:'Omega-3 (EPA/DHA)', tier:'Esencial',    dose:'2 softgels',     benefit:'Antiinflamatorio, dolor y sueño en fibromialgia.'},
+  {id:'d3k2',  moment:'desayuno',name:'Vitamina D3 + K2',  tier:'Esencial',    dose:'1 cáp (2000 IU)',benefit:'Energía, dolor, hueso e inmune. Medir nivel antes.'},
+  {id:'coq10', moment:'desayuno',name:'CoQ10 (Ubiquinol)', tier:'Recomendado', dose:'1 cápsula',      benefit:'Soporte mitocondrial directo para la fatiga.'},
+  {id:'maca',  moment:'desayuno',name:'Maca Negra',        tier:'Opcional',    dose:'2–4 caps',       benefit:'Libido y energía. Apoyo parcial.'},
+  {id:'mgmal', moment:'almuerzo',name:'Magnesio Malato',   tier:'Esencial',    dose:'2 caps',         benefit:'Fatiga y dolor muscular (evidencia en FM). El ácido málico da energía — por eso de día.'},
 ];
 
 const MOMENT_META = {
-  ayunas:   {label:'Solo Ayunas',             color:'var(--fasting)',emoji:'💧'},
-  desayuno: {label:'Desayuno',                color:'var(--am)',     emoji:'☀️'},
-  almuerzo: {label:'Almuerzo',                color:'var(--lunch)',  emoji:'🌤'},
-  noche:    {label:'Noche — antes de dormir', color:'var(--pm)',     emoji:'🌙'},
+  ayunas:   {label:'Solo Ayunas',  color:'var(--fasting)',emoji:'💧'},
+  desayuno: {label:'Desayuno',     color:'var(--am)',     emoji:'☀️'},
+  almuerzo: {label:'Almuerzo',     color:'var(--lunch)',  emoji:'🌤'},
 };
 
 let state = {}, currentFilter = 'all';
@@ -152,19 +145,21 @@ function getToday(){ return new Date().toLocaleDateString('es-CL'); }
 
 function loadState(){
   try{
-    const s = localStorage.getItem('mistack_v3');
+    const s = localStorage.getItem('mistack_v4');
     if(s){ const p=JSON.parse(s); if(p.date===getToday()){state=p.checked||{};return;} }
   }catch(e){}
   state={}; saveState();
 }
-function saveState(){ try{localStorage.setItem('mistack_v3',JSON.stringify({date:getToday(),checked:state}));}catch(e){} }
+function saveState(){ try{localStorage.setItem('mistack_v4',JSON.stringify({date:getToday(),checked:state}));}catch(e){} }
 function toggleSupp(id){ state[id]=!state[id]; saveState(); render(); }
 function resetDay(){ if(confirm('¿Resetear todos los registros del día?')){ state={}; saveState(); render(); } }
 function markAllDone(){ SUPPLEMENTS.forEach(s=>{state[s.id]=true;}); saveState(); render(); launchConfetti(); }
 function filterTab(tab,btn){ currentFilter=tab; document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); render(); }
 
+function tierClass(t){ return t==='Esencial' ? 'tier-esencial' : 'tier-opcional'; }
+
 function render(){
-  const moments=['ayunas','desayuno','almuerzo','noche'];
+  const moments=['ayunas','desayuno','almuerzo'];
   const vis = currentFilter==='all' ? moments : [currentFilter];
   let html='';
   vis.forEach(moment=>{
@@ -186,7 +181,7 @@ function render(){
           <div class="supp-name">${s.name}</div>
           <div class="supp-meta">
             <span class="dose-pill">${s.dose}</span>
-            <span class="cycle-pill">${s.cycle}</span>
+            <span class="tier-pill ${tierClass(s.tier)}">${s.tier}</span>
           </div>
           <div class="supp-benefit">${s.benefit}</div>
         </div>
@@ -205,7 +200,7 @@ function updateStats(){
   document.getElementById('stat-pct').textContent=pct+'%';
   document.getElementById('progress-fill').style.width=pct+'%';
   document.getElementById('bottom-action').innerHTML = done>=total
-    ? '<div class="completed-msg">🎉 ¡Stack completo del día! Excelente.</div>'
+    ? '<div class="completed-msg">🎉 ¡Stack completo del día!</div>'
     : '<button class="all-done-btn" onclick="markAllDone()">✓ Marcar todo como tomado</button>';
 }
 
@@ -218,7 +213,7 @@ function updateClock(){
 }
 
 function launchConfetti(){
-  const colors=['#f6ad55','#68d391','#63b3ed','#b794f4','#fc8181','#ffffff'];
+  const colors=['#f6ad55','#68d391','#63b3ed','#b794f4','#ffffff'];
   for(let i=0;i<50;i++){
     const p=document.createElement('div'); p.className='confetti-piece';
     p.style.cssText=`left:${Math.random()*100}vw;animation-delay:${Math.random()}s;animation-duration:${1.5+Math.random()}s;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'}`;
